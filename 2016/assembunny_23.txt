@@ -1,0 +1,62 @@
+a = 7
+b = a
+b -= 1
+d = a
+a = 0
+def outer():
+    def loop_b():
+        a += b * d
+    b -= 1
+    c = b
+    d = c
+    def loop_c():
+        c += d
+        d = 0
+    tgl c          ; 1: None / 2: 
+    outer()        ; a += 
+c = 94
+def outer_b():
+    jump d
+    def loop_d():
+        a += 1
+        d += 1
+    if d != 0:
+        loop_d()
+    c += 1
+    if c != 0:
+        outer_b()
+
+cpy a b
+dec b
+cpy a d
+cpy 0 a
+outer:
+    loop_b:
+        cpy b c
+        loop_a:
+            inc a
+            dec c
+            jnz c -2
+            end: a += c
+        dec d
+        jnz d -5
+        end: a += c * d
+    dec b       ; b = 5
+    cpy b c
+    cpy c d
+    loop_c:
+        dec d
+        inc c
+        jnz d -2
+        end: c += d
+    tgl c
+    cpy -16 c
+    jnz 1 c ; d = a, a = 0
+    
+cpy 94 c
+jnz 82 d
+inc a
+inc d
+jnz d -2
+inc c
+jnz c -5
