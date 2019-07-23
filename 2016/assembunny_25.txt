@@ -1,0 +1,30 @@
+d = a
+c = 4
+b = 633
+mul d c
+nop
+nop
+c = 0
+D:  jnz c -5
+a = d   (a = a * c = 4a)
+C:  nop
+b = a
+a = 0
+B:  c = 2
+    A:  jnz b 2
+        jnz 1 6
+        b -= 1
+        c -= 1
+        jnz c -4 (goto A)
+    a += 1
+jnz 1 -7 (goto B)
+b = 2
+jnz c 2
+jnz 1 4
+b -= 1
+c -= 1
+jnz 1 -4
+nop
+out b (>>> b)
+jnz a -19 (goto C)
+jnz 1 -21 (goto D)
