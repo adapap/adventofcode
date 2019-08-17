@@ -3,8 +3,6 @@ import heapq
 import os
 import requests
 from collections import defaultdict
-from heapq import nsmallest
-from itertools import combinations, permutations
 
 TOKEN = os.getenv('AOC_TOKEN')
 if not TOKEN:
@@ -34,6 +32,8 @@ class Data:
                 else:
                     return f.read().strip()
         response = requests.get(url, cookies={'session': TOKEN})
+        if 'Puzzle inputs differ by user.  Please log in to get your puzzle input.' in response:
+            raise ValueError('Token has expired. Please go to Applications -> Cookies and get the new token.')
         with open(local_path, 'w') as f:
             f.write(response.text)
         if no_strip:
@@ -70,26 +70,34 @@ class Grid2D:
     """Utility class which allows mapping of points onto a grid and 2D movement."""
     def __init__(self, *, default=None):
         self.points = defaultdict(lambda: default)
+        self.default = default
+        self.max_x = self.max_y = float('inf')
+        self.min_x = self.min_y = -float('inf')
 
     # Movement
     intercardinal = [-1 - 1j, 0 - 1j, 1 - 1j, -1, 1, -1 + 1j, 0 + 1j, 1 + 1j]
     cardinal = [0 - 1j, -1 + 0j, 0 + 1j, 1 + 0j]
     north, west, south, east = cardinal
+    
+    @property
+    def x_range(self):
+        return self.max_x - self.min_x
+    
+    @property
+    def y_range(self):
+        return self.max_y - self.min_y
 
-    @staticmethod
-    def item(pos):
+    def item(self, pos):
         """Returns the current item at the point."""
         return self[self.convert(pos)]
 
-    @staticmethod
-    def convert(item):
+    def convert(self, item):
         """Converts tuples to complex numbers."""
         if type(item) != complex:
             return complex(*item)
         return item
 
-    @staticmethod
-    def revert(comp):
+    def revert(self, comp):
         """Converts complex numbers to a tuple (x, y)."""
         return (comp.real, comp.imag)
 
@@ -105,10 +113,19 @@ class Grid2D:
         return self.points[self.convert(item)]
 
     def __setitem__(self, item, value):
-        self.points[self.convert(item)] = value
+        item = self.convert(item)
+        if item.real > self.max_x:
+            self.max_x = item.real
+        if item.real < self.min_x:
+            self.min_x = item.real
+        if item.imag > self.max_y:
+            self.max_y = item.imag
+        if item.imag < self.min_y:
+            self.min_y = item.imag
+        self.points[item] = value
 
     def __repr__(self):
-        return f'Grid2D(default={self.default})'
+        return f'Grid2D(default=\'{self.default}\')'
 
 class Vector:
     """Operations on numeric sequence and <x, y, z> vectors."""
@@ -195,8 +212,9 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.elements)[1]
 
-def print_ans(puzzle, answer):
-    print(f'Day {puzzle}: {answer}')
+def print_ans(puzzle: str, answer: str):
+    """Prints the answer to a puzzle in the form `puzzle: answer`."""
+    print('Day {}: {}'.format(puzzle, answer))
 
 def prod(iterable):
     """Calculates the product of a list."""
