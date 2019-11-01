@@ -71,13 +71,17 @@ class Grid2D:
     def __init__(self, *, default=None):
         self.points = defaultdict(lambda: default)
         self.default = default
-        self.max_x = self.max_y = float('inf')
-        self.min_x = self.min_y = -float('inf')
+        self.max_x = self.max_y = -float('inf')
+        self.min_x = self.min_y = float('inf')
 
     # Movement
     intercardinal = [-1 - 1j, 0 - 1j, 1 - 1j, -1, 1, -1 + 1j, 0 + 1j, 1 + 1j]
     cardinal = [0 - 1j, -1 + 0j, 0 + 1j, 1 + 0j]
     north, west, south, east = cardinal
+    
+    @property
+    def corners(self):
+        return [(self.min_x, self.min_y), (self.min_x, self.max_y), (self.max_x, self.min_y), (self.max_x, self.max_y)]
     
     @property
     def x_range(self):
@@ -115,13 +119,13 @@ class Grid2D:
     def __setitem__(self, item, value):
         item = self.convert(item)
         if item.real > self.max_x:
-            self.max_x = item.real
+            self.max_x = int(item.real)
         if item.real < self.min_x:
-            self.min_x = item.real
+            self.min_x = int(item.real)
         if item.imag > self.max_y:
-            self.max_y = item.imag
+            self.max_y = int(item.imag)
         if item.imag < self.min_y:
-            self.min_y = item.imag
+            self.min_y = int(item.imag)
         self.points[item] = value
 
     def __repr__(self):
