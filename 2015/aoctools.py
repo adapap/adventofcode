@@ -32,7 +32,7 @@ class Data:
                 else:
                     return f.read().strip()
         response = requests.get(url, cookies={'session': TOKEN})
-        if 'Puzzle inputs differ by user.  Please log in to get your puzzle input.' in response:
+        if 'Puzzle inputs differ by user.  Please log in to get your puzzle input.' in response.text:
             raise ValueError('Token has expired. Please go to Applications -> Cookies and get the new token.')
         with open(local_path, 'w') as f:
             f.write(response.text)
@@ -203,7 +203,8 @@ class Geometry:
                 yield (x, y)
 
 class PriorityQueue:
-    """A data structure in which elements get added according to priority values"""
+    """A data structure in which elements get added according to priority values.
+    Lower priority values are retrieved first."""
     def __init__(self):
         self.elements = []
     
