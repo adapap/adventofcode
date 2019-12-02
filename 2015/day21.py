@@ -1,5 +1,6 @@
 """RPG Simulator 20XX"""
 from aoctools import *
+import itertools
 import re
 
 store = """Weapons:    Cost  Damage  Armor
@@ -34,11 +35,12 @@ for line in store.split('\n'):
         item_type = 'armor'
     elif line.startswith('Rings'):
         item_type = 'ring'
-    values = list(map(int, re.findall('\d', line)))
+    values = list(map(int, re.findall('\d+', line)))
     if len(values) >= 3:
         items[item_type].append(values[-3:])
-print(items)
-        
+items['armor'].append([0, 0, 0])
+items['ring'].append([0, 0, 0])
+items['ring'].append([0, 0, 0])
 data = Data.fetch(day=21, year=2015)
 class Player:
     def __init__(self, hp, damage, armor):
@@ -47,18 +49,30 @@ class Player:
         self.armor = armor
     
     def battle(self, other) -> bool:
-        a = self.hp
-        b = other.hp
-        while a > 0 and b > 0:
-            a -= other.damage - self.armor
-            if a <= 0:
+        player = self.hp
+        boss = other.hp
+        while player > 0 and boss > 0:
+            boss -= max(self.damage - other.armor, 1)
+            if boss <= 0:
                 break
-            b -= self.damage - other.armor
-        return a <= 0
+            player -= max(other.damage - self.armor, 1)
+        return boss <= 0
             
     def __repr__(self):
         return f'[{self.damage} A|{self.armor} D] {self.hp} HP'
 
 hp, damage, armor = list(map(int, re.findall('\d+', data)))
 boss = Player(hp, damage, armor)
-# print(Player(8, 5, 5).simulate(Player(12, 7, 2)))
+min_cost = float('inf')
+for weapon in items['weapon']:
+    for armor in items['armor']:
+        for ring1, ring2 in itertools.combinations(items['ring'], 2):
+            cost = weapon[0] + armor[0] + ring1[0] + ring2[0]
+            if cost >= min_cost:
+                continue
+            attack = weapon[1] + ring1[1] + ring2[1]
+            defend = armor[2] + ring1[2] + ring2[2]
+            player = Player(100, attack, defend)
+            if player.battle(boss):
+                min_cost = cost
+print_ans('21a', min_cost)
