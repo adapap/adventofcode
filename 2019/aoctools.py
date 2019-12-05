@@ -34,8 +34,9 @@ class Data:
         response = requests.get(url, cookies={'session': TOKEN})
         if 'Puzzle inputs differ by user.  Please log in to get your puzzle input.' in response:
             raise ValueError('Token has expired. Please go to Applications -> Cookies and get the new token.')
-        with open(local_path, 'w') as f:
-            f.write(response.text)
+        else:
+            with open(local_path, 'w') as f:
+                f.write(response.text)
         if no_strip:
             return response.text
         else:
