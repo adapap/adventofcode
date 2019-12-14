@@ -1,77 +1,131 @@
+from collections import defaultdict, deque
 from typing import List
 class Op:
-    ADD = 1
-    MUL = 2
-    INP = 3
-    OUT = 4
-    JNZ = 5
-    JEZ = 6
-    JLT = 7
-    JEQ = 8
-    STP = 99
+    ADD = 1 # Add two values
+    MUL = 2 # Multiply two values
+    INP = 3 # Store input value
+    OUT = 4 # Output value
+    JNZ = 5 # Jump if not equal to zero
+    JEZ = 6 # Jump if equal to zero
+    JLT = 7 # Jump if less than zero
+    JEQ = 8 # Jump if equal
+    ARB = 9 # Adjust relative base
+    STP = 99 # Halt program
+
+class Parameter:
+    POSITION = 0
+    IMMEDIATE = 1
+    RELATIVE = 2
+
 class Intcode:
-    def __init__(self, values: List[int]):
-        self.values = values
+    def __init__(self, values: List[int], pos: int=0):
+        self.values = defaultdict(int)
+        self.values.update({i: values[i] for i in range(len(values))})
+        self.pos = pos
+        self.inputs = deque()
+        self.outputs = deque()
+        self.relative_base = 0
     
     @classmethod
     def from_csv(cls, data):
         """Creates an Intcode process from CSV data (4,5,10,0,2)"""
         return cls(list(map(int, data.split(','))))
+    
+    @classmethod
+    def from_data(cls, data, pos=0):
+        """Creates an Intcode process from an integer iterable"""
+        return cls(data, pos)
+    
+    def add_inputs(self, *inputs):
+        """Adds inputs to the input stream"""
+        self.inputs.extend(inputs)
+    
+    def get_output(self, n=1, all_output=False):
+        """Gets next n outputs"""
+        if all_output:
+            return list(self.outputs)
+        if n == 1:
+            return self.outputs.popleft()
+        return [self.outputs.popleft() for _ in range(n)]
+    
+    def get_parameter(self, n, p):
+        """Gets a parameter based on its mode."""
+        if p == Parameter.POSITION:
+            return self.values[n]
+        elif p == Parameter.IMMEDIATE:
+            return n
+        elif p == Parameter.RELATIVE:
+            return self.values[n + self.relative_base]
+        else:
+            raise ValueError('Invalid parameter mode:', p)
+    
+    def get_values(self, n=1):
+        """Returns the next n parameters, from 1-3"""
+        a = self.values[self.pos + 1]
+        b = self.values[self.pos + 2]
+        c = self.values[self.pos + 3]
+        if n == 1:
+            return a
+        elif n == 2:
+            return a, b
+        elif n == 3:
+            return a, b, c
         
-    def evaluate(self, inputs: List[int]):
-        """Evaluates Intcode instructions while providing external input"""
-        pos = 0
-        values = self.values
+    def evaluate(self):
+        """Evaluates Intcode instructions handling input and output streams"""
         while True:
-            ins = str(values[pos]).zfill(5)
-            a, b, c, op = map(int, (*ins[:3], ins[-2:]))
+            ins = str(self.values[self.pos]).zfill(5)
+            mode3, mode2, mode1, op = map(int, (*ins[:3], ins[-2:]))
             if op == Op.ADD:
-                x, y, z = values[pos + 1:pos + 4]
-                values[z] = (x if c else values[x]) + (y if b else values[y])
-                pos += 4
+                p1, p2, p3 = self.get_values(3)
+                self.values[p3] = self.get_parameter(p1, mode1) + self.get_parameter(p2, mode2)
+                self.pos += 4
             elif op == Op.MUL:
-                x, y, z = values[pos + 1:pos + 4]
-                values[z] = (x if c else values[x]) * (y if b else values[y])
-                pos += 4
+                p1, p2, p3 = self.get_values(3)
+                self.values[p3] = self.get_parameter(p1, mode1) * self.get_parameter(p2, mode2)
+                self.pos += 4
             elif op == Op.INP:
-                n = next(inputs)
-                x = values[pos + 1]
-                values[x] = n
-                pos += 2
+                n = self.inputs.popleft()
+                p1 = self.get_values(1)
+                self.values[self.get_parameter(p1, mode1)] = n
+                self.pos += 2
             elif op == Op.OUT:
-                x = values[pos + 1]
-                out = x if c else values[x]
-                if out:
-                    return out
-                pos += 2
+                p1 = self.get_values(1)
+                self.outputs.append(self.get_parameter(p1, mode1))
+                self.pos += 2
             elif op == Op.JNZ:
-                x, y = values[pos + 1:pos + 3]
-                if (x if c else values[x]) != 0:
-                    pos = y if b else values[y]
+                p1, p2 = self.get_values(2)
+                if self.get_parameter(p1, mode1) != 0:
+                    self.pos = self.get_parameter(p2, mode2)
                 else:
-                    pos += 3
+                    self.pos += 3
             elif op == Op.JEZ:
-                x, y = values[pos + 1:pos + 3]
-                if (x if c else values[x]) == 0:
-                    pos = y if b else values[y]
+                p1, p2 = self.get_values(2)
+                if self.get_parameter(p1, mode1) == 0:
+                    self.pos = self.get_parameter(p2, mode2)
                 else:
-                    pos += 3
+                    self.pos += 3
             elif op == Op.JLT:
-                x, y, z = values[pos + 1:pos + 4]
-                if (x if c else values[x]) < (y if b else values[y]):
-                    values[z] = 1
+                p1, p2, p3 = self.get_values(3)
+                if self.get_parameter(p1, mode1) < self.get_parameter(p2, mode2):
+                    self.values[p3] = 1
                 else:
-                    values[z] = 0
-                pos += 4
+                    self.values[p3] = 0
+                self.pos += 4
             elif op == Op.JEQ:
-                x, y, z = values[pos + 1:pos + 4]
-                if (x if c else values[x]) == (y if b else values[y]):
-                    values[z] = 1
+                p1, p2, p3 = self.get_values(3)
+                if self.get_parameter(p1, mode1) == self.get_parameter(p2, mode2):
+                    self.values[p3] = 1
                 else:
-                    values[z] = 0
-                pos += 4
+                    self.values[p3] = 0
+                self.pos += 4
+            elif op == Op.ARB:
+                p1 = self.get_values(1)
+                self.relative_base += self.get_parameter(p1, mode1)
+                self.pos += 2
             elif op == Op.STP:
+                self.pos += 1
                 break
             else:
-                raise ValueError('No-op:', op)
-        return 0
+                raise ValueError('Invalid opcode:', op)
+            print(self.values)
