@@ -105,6 +105,14 @@ class Grid2D:
     def revert(self, comp):
         """Converts complex numbers to a tuple (x, y)."""
         return (comp.real, comp.imag)
+    
+    def render(self, keys={}):
+        """Visualizes the grid in 2D ASCII characters."""
+        for y in range(self.min_y, self.max_y + 1):
+            for x in range(self.min_x, self.max_x + 1):
+                char = self[x, y]
+                print(keys.get(char, char), end='')
+            print()
 
     def manhattan(self, p1, p2):
         """Computes the manhattan distance to another point."""

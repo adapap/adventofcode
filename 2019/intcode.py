@@ -25,6 +25,7 @@ class Intcode:
         self.inputs = deque()
         self.outputs = deque()
         self.relative_base = 0
+        self.halted = False
     
     @classmethod
     def from_csv(cls, data):
@@ -42,19 +43,25 @@ class Intcode:
     
     def get_output(self, n=1, all_output=False):
         """Gets next n outputs"""
+        if not self.outputs:
+            return []
         if all_output:
             return list(self.outputs)
         if n == 1:
             return self.outputs.popleft()
         return [self.outputs.popleft() for _ in range(n)]
     
-    def get_parameter(self, n, p):
+    def get_parameter(self, n, p, write=False):
         """Gets a parameter based on its mode."""
         if p == Parameter.POSITION:
+            if write:
+                return n
             return self.values[n]
         elif p == Parameter.IMMEDIATE:
             return n
         elif p == Parameter.RELATIVE:
+            if write:
+                return n + self.relative_base
             return self.values[n + self.relative_base]
         else:
             raise ValueError('Invalid parameter mode:', p)
@@ -78,16 +85,18 @@ class Intcode:
             mode3, mode2, mode1, op = map(int, (*ins[:3], ins[-2:]))
             if op == Op.ADD:
                 p1, p2, p3 = self.get_values(3)
-                self.values[p3] = self.get_parameter(p1, mode1) + self.get_parameter(p2, mode2)
+                self.values[self.get_parameter(p3, mode3, write=True)] = self.get_parameter(p1, mode1) + self.get_parameter(p2, mode2)
                 self.pos += 4
             elif op == Op.MUL:
                 p1, p2, p3 = self.get_values(3)
-                self.values[p3] = self.get_parameter(p1, mode1) * self.get_parameter(p2, mode2)
+                self.values[self.get_parameter(p3, mode3, write=True)] = self.get_parameter(p1, mode1) * self.get_parameter(p2, mode2)
                 self.pos += 4
             elif op == Op.INP:
+                if not self.inputs:
+                    break
                 n = self.inputs.popleft()
                 p1 = self.get_values(1)
-                self.values[self.get_parameter(p1, mode1)] = n
+                self.values[self.get_parameter(p1, mode1, write=True)] = n
                 self.pos += 2
             elif op == Op.OUT:
                 p1 = self.get_values(1)
@@ -108,16 +117,16 @@ class Intcode:
             elif op == Op.JLT:
                 p1, p2, p3 = self.get_values(3)
                 if self.get_parameter(p1, mode1) < self.get_parameter(p2, mode2):
-                    self.values[p3] = 1
+                    self.values[self.get_parameter(p3, mode3, write=True)] = 1
                 else:
-                    self.values[p3] = 0
+                    self.values[self.get_parameter(p3, mode3, write=True)] = 0
                 self.pos += 4
             elif op == Op.JEQ:
                 p1, p2, p3 = self.get_values(3)
                 if self.get_parameter(p1, mode1) == self.get_parameter(p2, mode2):
-                    self.values[p3] = 1
+                    self.values[self.get_parameter(p3, mode3, write=True)] = 1
                 else:
-                    self.values[p3] = 0
+                    self.values[self.get_parameter(p3, mode3, write=True)] = 0
                 self.pos += 4
             elif op == Op.ARB:
                 p1 = self.get_values(1)
@@ -125,7 +134,7 @@ class Intcode:
                 self.pos += 2
             elif op == Op.STP:
                 self.pos += 1
+                self.halted = True
                 break
             else:
                 raise ValueError('Invalid opcode:', op)
-            print(self.values)
