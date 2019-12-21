@@ -178,7 +178,7 @@ class Vector:
     __rsub__ = __sub__
 
     def __repr__(self):
-        return f'<{", ".join(self.sequence)}>'
+        return f'<{", ".join(map(str, self.sequence))}>'
 
 class Geometry:
     """Collection of common geometrical methods and values."""
