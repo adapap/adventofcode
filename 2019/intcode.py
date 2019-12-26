@@ -18,9 +18,9 @@ class Parameter:
     RELATIVE = 2
 
 class Intcode:
-    def __init__(self, values: List[int], pos: int=0):
-        self.values = defaultdict(int)
-        self.values.update({i: values[i] for i in range(len(values))})
+    def __init__(self, memory: List[int], pos: int=0):
+        self.memory = defaultdict(int)
+        self.memory.update({i: memory[i] for i in range(len(memory))})
         self.pos = pos
         self.inputs = deque()
         self.outputs = deque()
@@ -56,21 +56,21 @@ class Intcode:
         if p == Parameter.POSITION:
             if write:
                 return n
-            return self.values[n]
+            return self.memory[n]
         elif p == Parameter.IMMEDIATE:
             return n
         elif p == Parameter.RELATIVE:
             if write:
                 return n + self.relative_base
-            return self.values[n + self.relative_base]
+            return self.memory[n + self.relative_base]
         else:
             raise ValueError('Invalid parameter mode:', p)
     
     def get_values(self, n=1):
         """Returns the next n parameters, from 1-3"""
-        a = self.values[self.pos + 1]
-        b = self.values[self.pos + 2]
-        c = self.values[self.pos + 3]
+        a = self.memory[self.pos + 1]
+        b = self.memory[self.pos + 2]
+        c = self.memory[self.pos + 3]
         if n == 1:
             return a
         elif n == 2:
@@ -81,22 +81,22 @@ class Intcode:
     def evaluate(self):
         """Evaluates Intcode instructions handling input and output streams"""
         while True:
-            ins = str(self.values[self.pos]).zfill(5)
+            ins = str(self.memory[self.pos]).zfill(5)
             mode3, mode2, mode1, op = map(int, (*ins[:3], ins[-2:]))
             if op == Op.ADD:
                 p1, p2, p3 = self.get_values(3)
-                self.values[self.get_parameter(p3, mode3, write=True)] = self.get_parameter(p1, mode1) + self.get_parameter(p2, mode2)
+                self.memory[self.get_parameter(p3, mode3, write=True)] = self.get_parameter(p1, mode1) + self.get_parameter(p2, mode2)
                 self.pos += 4
             elif op == Op.MUL:
                 p1, p2, p3 = self.get_values(3)
-                self.values[self.get_parameter(p3, mode3, write=True)] = self.get_parameter(p1, mode1) * self.get_parameter(p2, mode2)
+                self.memory[self.get_parameter(p3, mode3, write=True)] = self.get_parameter(p1, mode1) * self.get_parameter(p2, mode2)
                 self.pos += 4
             elif op == Op.INP:
                 if not self.inputs:
                     break
                 n = self.inputs.popleft()
                 p1 = self.get_values(1)
-                self.values[self.get_parameter(p1, mode1, write=True)] = n
+                self.memory[self.get_parameter(p1, mode1, write=True)] = n
                 self.pos += 2
             elif op == Op.OUT:
                 p1 = self.get_values(1)
@@ -117,16 +117,16 @@ class Intcode:
             elif op == Op.JLT:
                 p1, p2, p3 = self.get_values(3)
                 if self.get_parameter(p1, mode1) < self.get_parameter(p2, mode2):
-                    self.values[self.get_parameter(p3, mode3, write=True)] = 1
+                    self.memory[self.get_parameter(p3, mode3, write=True)] = 1
                 else:
-                    self.values[self.get_parameter(p3, mode3, write=True)] = 0
+                    self.memory[self.get_parameter(p3, mode3, write=True)] = 0
                 self.pos += 4
             elif op == Op.JEQ:
                 p1, p2, p3 = self.get_values(3)
                 if self.get_parameter(p1, mode1) == self.get_parameter(p2, mode2):
-                    self.values[self.get_parameter(p3, mode3, write=True)] = 1
+                    self.memory[self.get_parameter(p3, mode3, write=True)] = 1
                 else:
-                    self.values[self.get_parameter(p3, mode3, write=True)] = 0
+                    self.memory[self.get_parameter(p3, mode3, write=True)] = 0
                 self.pos += 4
             elif op == Op.ARB:
                 p1 = self.get_values(1)

@@ -17,7 +17,6 @@ data = Data.fetch_by_line(day=12, year=2019)
 # <x=2, y=-7, z=3>
 # <x=9, y=-8, z=-3>""".split('\n')
 moons = []
-cmp = lambda a, b: (a > b) - (a < b)
 class Moon:
     def __init__(self, pos):
         self.pos = pos

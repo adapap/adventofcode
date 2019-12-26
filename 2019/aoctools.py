@@ -297,3 +297,7 @@ def prod(iterable):
     for x in iterable:
         p *= x
     return p
+
+def cmp(a, b):
+    """Returns +1 or -1 if a is different from b, otherwise 0."""
+    return (a > b) - (a < b)
