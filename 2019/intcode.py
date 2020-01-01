@@ -41,6 +41,11 @@ class Intcode:
         """Adds inputs to the input stream"""
         self.inputs.extend(inputs)
     
+    def execute(self, *inputs):
+        """Adds input to program and evaluates it"""
+        self.add_inputs(*inputs)
+        self.evaluate()
+    
     def get_output(self, n=1, all_output=False):
         """Gets next n outputs"""
         if not self.outputs:
