@@ -48,6 +48,7 @@ path = path.strip(',')
 # print(path)
 prog = Intcode.from_csv(data)
 prog.memory[0] = 2
+# Split path into 3 repeating substrings
 main = 'A,C,A,C,B,A,B,A,B,C\n'
 fun_a = 'R,12,L,8,L,4,L,4\n'
 fun_b = 'L,8,L,4,R,12,L,6,L,4\n'
