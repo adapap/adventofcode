@@ -4,11 +4,12 @@ import os
 import requests
 from collections import defaultdict
 from itertools import cycle, product
+from typing import Any, Sequence
 
 TOKEN = os.getenv('AOC_TOKEN')
 if not TOKEN:
     with open('token.txt') as f:
-        TOKEN = f.read()
+        TOKEN = f.read().strip()
 
 URL = 'https://adventofcode.com/{year}/day/{day}/input'
 LOCAL = 'inputs/{day}.txt'
@@ -23,7 +24,6 @@ class Data:
         """Retrieves the raw data from the website."""
         if year < 2015 or not 1 <= day <= 25:
             raise ValueError('Day must be within range 1-25 and year must be after 2015.')
-
         url = URL.format(year=year, day=day)
         local_path = LOCAL.format(day=day)
         if os.path.exists(local_path):
@@ -289,17 +289,20 @@ class defaultlist(list):
         r += self
         return r
 
-def print_ans(puzzle: str, answer: str):
+def print_ans(puzzle: str, answer: Any):
     """Prints the answer to a puzzle in the form `puzzle: answer`."""
     print('Day {}: {}'.format(puzzle, answer))
 
-def prod(iterable):
-    """Calculates the product of a list."""
-    p = 1
-    for x in iterable:
-        p *= x
-    return p
+class Math:
+    @staticmethod
+    def prod(iterable: Sequence[int]) -> int:
+        """Calculates the product of a list."""
+        p = 1
+        for x in iterable:
+            p *= x
+        return p
 
-def cmp(a, b):
-    """Returns +1 or -1 if a is different from b, otherwise 0."""
-    return (a > b) - (a < b)
+    @staticmethod
+    def compare(a: Any, b: Any) -> int:
+        """Returns +1 or -1 if a is different from b, otherwise 0."""
+        return (a > b) - (a < b)
