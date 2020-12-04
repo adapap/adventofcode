@@ -1,6 +1,7 @@
 """A collection of data structures and algorithms for Advent of Code puzzles."""
 import heapq
 import os
+import re
 import requests
 import sys
 from collections import defaultdict
@@ -23,7 +24,7 @@ class Puzzle:
     
         TOKEN = os.getenv('AOC_TOKEN')
         if not TOKEN:
-            if not os.path.exists(os.path.relpath('../tokens.txt')):
+            if not os.path.exists(os.path.relpath('../token.txt')):
                 print('Missing token file. Find your token (in developer tools: Application -> Cookies -> "session") on Advent of Code.')
                 sys.exit(1)
             with open('../token.txt') as f:
@@ -64,14 +65,21 @@ class Puzzle:
             lines = data_str.strip().split('\n')
         return lines
     
-    def submit(self, *, part: int, answer: Any):
+    def submit(self, part: int, answer: Any):
         res = requests.post(self.base_url + '/answer',
                             cookies={'session': self.token},
                             data={
                                 'level': part,
                                 'answer': str(answer),
                             })
-        print(res.text)
+        body = re.search(r'<article>(.+)</article>', res.text)
+        if not body or not len(body.groups()):
+            print('Error submitting answer - response:', res.text)
+            return
+        text = body.groups()[0]
+        text = re.sub(r'(<.+?>|</.+?>)', '', text)
+        text = re.sub(r' +', ' ', text)
+        print(text)
 
 class Grid2D:
     """Utility class which allows mapping of points onto a grid and 2D movement."""

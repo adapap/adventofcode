@@ -7,6 +7,7 @@ for x in map(int, data):
     if x in comp:
         p = x * (2020 - x)
         aoc.print_ans('1a', p)
+        puzzle.submit(part=1, answer=p)
     comp.add(2020 - x)
 
 nums = list(map(int, data))
