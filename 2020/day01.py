@@ -1,6 +1,7 @@
 import aoc
 
-data = aoc.Data.fetch_by_line(day=1, year=2020)
+puzzle = aoc.Puzzle(day=1, year=2020)
+data = puzzle.fetch_by_line()
 comp = set()
 for x in map(int, data):
     if x in comp:
@@ -14,5 +15,5 @@ for x in nums:
     remain = 2020 - x
     for y in nums:
         if y != x and remain - y in nums:
-            result = aoc.Math.prod([x, y, remain - y])
+            result = aoc.Math.prod(x, y, remain - y)
 aoc.print_ans('1b', result)

@@ -2,64 +2,76 @@
 import heapq
 import os
 import requests
+import sys
 from collections import defaultdict
 from itertools import cycle, product
 from typing import Any, Sequence
 
-TOKEN = os.getenv('AOC_TOKEN')
-if not TOKEN:
-    with open('token.txt') as f:
-        TOKEN = f.read().strip()
-
-URL = 'https://adventofcode.com/{year}/day/{day}/input'
+URL = 'https://adventofcode.com/{year}/day/{day}'
 LOCAL = 'inputs/{day}.txt'
 
-class Data:
+class Puzzle:
     """
-    Retrieves puzzle inputs for one puzzle given the day and year.
-    Requires TOKEN to be present in environment or a text file.
+    Manages retrieval and submission for Advent of Code puzzles.
+    Requires token to be present in environment or `token.txt`.
     """
-    @staticmethod
-    def fetch(*, day: int, year: int, no_strip=False) -> str:
-        """Retrieves the raw data from the website."""
-        if year < 2015 or not 1 <= day <= 25:
-            raise ValueError('Day must be within range 1-25 and year must be after 2015.')
-        url = URL.format(year=year, day=day)
-        local_path = LOCAL.format(day=day)
-        if os.path.exists(local_path):
-            with open(local_path) as f:
+    def __init__(self, *, day: int, year: int, input_path: str=LOCAL) -> None:
+        self.day = day
+        self.year = year
+        if self.year <= 2015 or not 1 <= self.day <= 25:
+            raise ValueError('Day must be within range 1-25 and year cannot be before 2015.')
+    
+        TOKEN = os.getenv('AOC_TOKEN')
+        if not TOKEN:
+            if not os.path.exists(os.path.relpath('../tokens.txt')):
+                print('Missing token file. Find your token (in developer tools: Application -> Cookies -> "session") on Advent of Code.')
+                sys.exit(1)
+            with open('../token.txt') as f:
+                TOKEN = f.read().strip()
+        self.token = TOKEN
+        self.input_path = input_path.format(day=day)
+    
+    @property
+    def base_url(self) -> str:
+        """Returns the base url for HTTP requests to adventofcode.com"""
+        return URL.format(year=self.year, day=self.day)
+        
+    def fetch(self, *, no_strip=False) -> str:
+        """Retrieves the puzzle input as a single string."""
+        if os.path.exists(self.input_path):
+            with open(self.input_path) as f:
                 if no_strip:
                     return f.read()
                 else:
                     return f.read().strip()
-        response = requests.get(url, cookies={'session': TOKEN}).text
+        response = requests.get(self.base_url + '/input', cookies={'session': self.token}).text
         if 'Puzzle inputs differ by user.  Please log in to get your puzzle input.' in response:
             raise ValueError('Token has expired. Please go to Applications -> Cookies and get the new token.')
         else:
-            with open(local_path, 'w') as f:
+            with open(self.input_path, 'w') as f:
                 f.write(response)
         if no_strip:
             return response
         else:
             return response.strip()
 
-    @staticmethod
-    def generator(iterable):
-        """Helper method to use generators for parsing data."""
-        yield from iterable
-
-    @staticmethod
-    def fetch_by_line(*, day: int, year: int, gen=False, no_strip=False) -> Sequence[str]:
-        """
-        Returns an iterable to get data by line.
-        Set gen to True to return a generator.
-        """
-        data_str = Data.fetch(day=day, year=year, no_strip=no_strip)
+    def fetch_by_line(self, *, no_strip=False) -> Sequence[str]:
+        """Returns the puzzle input split by newlines."""
+        data_str = self.fetch(no_strip=no_strip)
         if no_strip:
             lines = data_str.split('\n')
         else:
             lines = data_str.strip().split('\n')
-        return Data.generator(data_str) if gen else lines
+        return lines
+    
+    def submit(self, *, part: int, answer: Any):
+        res = requests.post(self.base_url + '/answer',
+                            cookies={'session': self.token},
+                            data={
+                                'level': part,
+                                'answer': str(answer),
+                            })
+        print(res.text)
 
 class Grid2D:
     """Utility class which allows mapping of points onto a grid and 2D movement."""
