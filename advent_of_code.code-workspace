@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "2020",
+			"path": "2020"
+		},
+		{
+			"name": "Advent of Code",
+			"path": "."
+		}
+	],
+	"settings": {}
+}

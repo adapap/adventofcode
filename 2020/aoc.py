@@ -20,7 +20,7 @@ class Data:
     Requires TOKEN to be present in environment or a text file.
     """
     @staticmethod
-    def fetch(*, day: int, year: int, no_strip=False):
+    def fetch(*, day: int, year: int, no_strip=False) -> str:
         """Retrieves the raw data from the website."""
         if year < 2015 or not 1 <= day <= 25:
             raise ValueError('Day must be within range 1-25 and year must be after 2015.')
@@ -49,7 +49,7 @@ class Data:
         yield from iterable
 
     @staticmethod
-    def fetch_by_line(*, day: int, year: int, gen=False, no_strip=False):
+    def fetch_by_line(*, day: int, year: int, gen=False, no_strip=False) -> Sequence[str]:
         """
         Returns an iterable to get data by line.
         Set gen to True to return a generator.
@@ -60,13 +60,6 @@ class Data:
         else:
             lines = data_str.strip().split('\n')
         return Data.generator(data_str) if gen else lines
-
-    @staticmethod
-    def double_enum(iterable):
-        """Nested iteration yielding indices and elements at each loop."""
-        for i, row in enumerate(iterable):
-            for j, item in enumerate(row):
-                yield i, j, item
 
 class Grid2D:
     """Utility class which allows mapping of points onto a grid and 2D movement."""
@@ -88,17 +81,19 @@ class Grid2D:
     
     @property
     def x_range(self) -> int:
+        """Returns the width of the grid."""
         return self.max_x - self.min_x
     
     @property
     def y_range(self) -> int:
+        """Returns the height of the grid."""
         return self.max_y - self.min_y
 
     def item(self, pos):
         """Returns the current item at the point."""
         return self[self.convert(pos)]
 
-    def convert(self, item):
+    def convert(self, item) -> complex:
         """Converts tuples to complex numbers."""
         if type(item) != complex:
             return complex(*item)
@@ -116,7 +111,7 @@ class Grid2D:
                 print(keys.get(char, char), end='')
             print()
 
-    def manhattan(self, p1, p2):
+    def manhattan(self, p1, p2) -> float:
         """Computes the manhattan distance to another point."""
         p1, p2 = map(self.convert, (p1, p2))
         return abs(p1.real - p2.real) + abs(p1.imag - p2.imag)
@@ -288,6 +283,15 @@ class defaultlist(list):
         r = defaultlist(factory=self.__factory)
         r += self
         return r
+        
+# Utility methods
+def nested_enum(iterable: Sequence[Any], indices=tuple(), depth=2):
+    """Nested iteration yielding indices and elements at each loop."""
+    for i, x in enumerate(iterable):
+        if depth == 0:
+            yield indices, x
+        else:
+            yield from nested_enum(x, indices=(i,) + indices, depth=depth - 1)
 
 def print_ans(puzzle: str, answer: Any):
     """Prints the answer to a puzzle in the form `puzzle: answer`."""
@@ -295,10 +299,10 @@ def print_ans(puzzle: str, answer: Any):
 
 class Math:
     @staticmethod
-    def prod(iterable: Sequence[int]) -> int:
+    def prod(*values: int) -> int:
         """Calculates the product of a list."""
         p = 1
-        for x in iterable:
+        for x in values:
             p *= x
         return p
 
