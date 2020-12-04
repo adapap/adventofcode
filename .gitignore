@@ -1,3 +1,4 @@
 **/*.py[oc]
-__pycache__
+**/__pycache__
+**/token.txt
 *.code-workspace
