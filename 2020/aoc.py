@@ -72,9 +72,9 @@ class Puzzle:
                                 'level': part,
                                 'answer': str(answer),
                             })
-        body = re.search(r'<article>(.+)</article>', res.text)
+        body = re.search(r'<article>(.+)</article>', res.text, re.DOTALL)
         if not body or not len(body.groups()):
-            print('Error submitting answer - response:', res.text)
+            print('Error submitting answer - response:\n', res.text)
             return
         text = body.groups()[0]
         text = re.sub(r'(<.+?>|</.+?>)', '', text)
