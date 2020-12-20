@@ -6,7 +6,7 @@ import requests
 import sys
 from collections import defaultdict
 from itertools import cycle, product
-from typing import Any, Sequence
+from typing import Any, Sequence, Union
 
 URL = 'https://adventofcode.com/{year}/day/{day}'
 LOCAL = 'inputs/{day}.txt'
@@ -37,7 +37,7 @@ class Puzzle:
         """Returns the base url for HTTP requests to adventofcode.com"""
         return URL.format(year=self.year, day=self.day)
         
-    def fetch(self, *, no_strip=False) -> str:
+    def fetch(self, *, no_strip=False, numeric=False) -> Union[str, int]:
         """Retrieves the puzzle input as a single string."""
         if os.path.exists(self.input_path):
             with open(self.input_path) as f:
@@ -51,18 +51,22 @@ class Puzzle:
         else:
             with open(self.input_path, 'w') as f:
                 f.write(response)
+        if numeric:
+            return int(response)
         if no_strip:
             return response
         else:
             return response.strip()
 
-    def fetch_by_line(self, *, no_strip=False) -> Sequence[str]:
+    def fetch_by_line(self, *, no_strip=False, numeric=False) -> Sequence[Any]:
         """Returns the puzzle input split by newlines."""
-        data_str = self.fetch(no_strip=no_strip)
+        data = str(self.fetch(no_strip=no_strip))
         if no_strip:
-            lines = data_str.split('\n')
+            lines = data.split('\n')
         else:
-            lines = data_str.strip().split('\n')
+            lines = data.strip().split('\n')
+        if numeric:
+            return list(map(int, lines))
         return lines
     
     def submit(self, part: int, answer: Any):
@@ -90,10 +94,10 @@ class Grid2D:
         self.min_x = self.min_y = float('inf')
 
     # Movement
-    intercardinal = [-1 - 1j, 0 - 1j, 1 - 1j, -1, 1, -1 + 1j, 0 + 1j, 1 + 1j]
-    cardinal = [0 - 1j, -1 + 0j, 0 + 1j, 1 + 0j]
+    cardinal = [-1 - 1j, 0 - 1j, 1 - 1j, -1, 1, -1 + 1j, 0 + 1j, 1 + 1j]
+    orthogonal = [0 - 1j, -1 + 0j, 0 + 1j, 1 + 0j]
     diagonal = [-1 - 1j, 1 - 1j, -1 + 1j, 1 + 1j]
-    north, west, south, east = cardinal
+    north, west, south, east = orthogonal
     
     @property
     def corners(self) -> list:
