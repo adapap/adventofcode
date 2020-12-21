@@ -1,5 +1,6 @@
 """A collection of data structures and algorithms for Advent of Code puzzles."""
 import heapq
+import math
 import os
 import re
 import requests
@@ -334,3 +335,7 @@ class Math:
     def compare(a: Any, b: Any) -> int:
         """Returns +1 or -1 if a is different from b, otherwise 0."""
         return (a > b) - (a < b)
+
+    @staticmethod
+    def lcm(a, b):
+        return abs(a*b) // math.gcd(a, b)
