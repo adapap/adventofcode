@@ -338,4 +338,5 @@ class Math:
 
     @staticmethod
     def lcm(a, b):
-        return abs(a*b) // math.gcd(a, b)
+        """Returns the Least Common Multiple of a and b."""
+        return abs(a * b) // math.gcd(a, b)
