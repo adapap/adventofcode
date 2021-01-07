@@ -29,5 +29,7 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.linting.mypyEnabled": false
+	}
 }

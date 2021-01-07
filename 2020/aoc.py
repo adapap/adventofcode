@@ -79,7 +79,7 @@ class Puzzle:
                             })
         body = re.search(r'<article>(.+)</article>', res.text, re.DOTALL)
         if not body or not len(body.groups()):
-            print('Error submitting answer - response:\n', res.text)
+            print('Error submitting answer. Is the token outdated?')
             return
         text = body.groups()[0]
         text = re.sub(r'(<.+?>|</.+?>)', '', text)
