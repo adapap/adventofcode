@@ -16,14 +16,16 @@ pub enum Part {
 
 #[tokio::main]
 async fn main() {
+    // Handle CLI arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() < 4 {
-        println!("Usage: cargo run <year> <day> <part> [-t, --test] [-s, --submit]");
+    if args.len() < 3 {
+        println!("Usage: cargo run <year> <day + part> [-s, --submit]");
         return;
     }
+    let submit_flag = args.contains(&"-s".to_string()) || args.contains(&"--submit".to_string());
     let year = String::from(&args[1]);
-    let day = String::from(&args[2]);
-    let part = match String::from(&args[3]).as_str() {
+    let day = String::from(&args[2][0..&args[2].len() - 1]);
+    let part = match String::from(&args[2][&args[2].len() - 1..]).as_str() {
         "a" => Part::A,
         "b" => Part::B,
         _ => {
@@ -44,4 +46,7 @@ async fn main() {
         }
     };
     println!("{} Day {}{:?}: {}", puzzle.year, puzzle.day, part, answer);
+    if submit_flag {
+        aoc::input::submit(&puzzle, &part, &answer).await;
+    }
 }

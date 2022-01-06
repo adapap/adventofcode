@@ -20,3 +20,14 @@ pub fn solve(data: &str, part: &Part) -> String {
         Part::B => simulate(&data, 256).to_string(),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test1() {
+        let input = "3,4,3,1,2";
+        assert_eq!(self::solve(input, &Part::A), "5934");
+        assert_eq!(self::solve(input, &Part::B), "26984457539");
+    }
+}

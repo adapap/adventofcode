@@ -54,3 +54,19 @@ pub fn solve(data: &str, part: &Part) -> String {
         Part::B => submarine_2.answer().to_string(),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test1() {
+        let input = "forward 5
+down 5
+forward 8
+up 3
+down 8
+forward 2";
+        assert_eq!(self::solve(input, &Part::A), "150");
+        assert_eq!(self::solve(input, &Part::B), "900");
+    }
+}

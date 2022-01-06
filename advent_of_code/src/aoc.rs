@@ -1,6 +1,6 @@
 // Fetches and returns input for an Advent of Code puzzle
 pub mod input {
-    use crate::Puzzle;
+    use crate::{Part, Puzzle};
     use dotenv_codegen::dotenv;
     use reqwest;
     use std::{error, fs, path::Path};
@@ -49,6 +49,49 @@ pub mod input {
             return Some(data);
         }
         None
+    }
+
+    pub async fn submit(puzzle: &Puzzle, part: &Part, data: &str) {
+        let token = get_token();
+        let url = format!("{}/{}/day/{}/answer", BASE_URL, puzzle.year, puzzle.day);
+        let level = match part {
+            Part::A => "1",
+            Part::B => "2",
+        };
+        let payload = [("level", level), ("answer", data)];
+        let response = reqwest::Client::new()
+            .post(url)
+            .header("cookie", format!("session={}", token))
+            .form(&payload)
+            .send()
+            .await
+            .unwrap_or_else(|err| {
+                panic!("Failed to submit puzzle answer: {}", err);
+            });
+        let result = response
+            .text()
+            .await
+            .unwrap_or_else(|err| panic!("Failed to convert response to text: {}", err));
+        if result.contains("Your puzzle answer was") {
+            println!("You already submitted an answer for day {}!", puzzle.day);
+        } else if result.contains("That's the right answer") {
+            println!(
+                "Submitted correct answer for day {}! (Answer: {})",
+                puzzle.day, &data
+            );
+        } else if result.contains("That's not the right answer")
+            || result.contains("You need to actually provide an answer")
+        {
+            println!(
+                "Incorrect answer for day {}! (Answer: {})",
+                puzzle.day, &data
+            );
+        } else {
+            println!(
+                "Unexpected error while submitting answer. Response was:\n{}",
+                result
+            );
+        }
     }
 }
 
@@ -129,12 +172,29 @@ pub mod space {
         // Returns all values matching the specified axis
         pub fn on_axis(&self, axis: usize, value: i32) -> Vec<(&Point<N>, &V)> {
             if axis >= N {
-                panic! {"error: axis is larger than dimensions"}
+                panic!("error: axis is larger than dimensions")
             }
             self.points
                 .iter()
                 .filter(|(k, v)| k[axis] == value)
                 .collect()
+        }
+        // Returns all points orthogonal to a point, if they exist
+        pub fn cardinal(&self, origin: &Point<N>) -> Vec<Point<N>> {
+            if N < 2 {
+                panic!("error: need 2 dimensions to find cardinal neighbors");
+                return vec![];
+            }
+            let mut values = vec![];
+            for delta in [-1, 1] {
+                let mut point: Point<N> = origin.clone();
+                point[0] += delta;
+                values.push(point);
+                let mut point: Point<N> = origin.clone();
+                point[1] += delta;
+                values.push(point);
+            }
+            values
         }
     }
 }

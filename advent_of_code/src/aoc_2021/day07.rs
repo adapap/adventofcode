@@ -28,3 +28,14 @@ pub fn solve(data: &str, part: &Part) -> String {
         Part::B => min_dist(&crabs, false).to_string(),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test1() {
+        let input = "16,1,2,0,4,2,7,1,2,14";
+        assert_eq!(self::solve(input, &Part::A), "37");
+        assert_eq!(self::solve(input, &Part::B), "168");
+    }
+}

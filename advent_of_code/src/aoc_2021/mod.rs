@@ -8,7 +8,7 @@ mod day05;
 mod day06;
 mod day07;
 mod day08;
-// mod day09;
+mod day09;
 // mod day10;
 // mod day11;
 // mod day12;
@@ -36,7 +36,7 @@ pub fn solve(day: &str, data: &str, part: &Part) -> String {
         "6" => day06::solve(&data, &part),
         "7" => day07::solve(&data, &part),
         "8" => day08::solve(&data, &part),
-        // "9" => day09::solve(&data, &part),
+        "9" => day09::solve(&data, &part),
         // "10" => day10::solve(&data, &part),
         // "11" => day11::solve(&data, &part),
         // "12" => day12::solve(&data, &part),
@@ -53,6 +53,6 @@ pub fn solve(day: &str, data: &str, part: &Part) -> String {
         // "23" => day23::solve(&data, &part),
         // "24" => day24::solve(&data, &part),
         // "25" => day25::solve(&data, &part),
-        _ => panic!("error: invalid day {} in year {}", day, "2021"),
+        _ => unimplemented!("day {} in year {}", day, "2021"),
     };
 }

@@ -78,3 +78,25 @@ pub fn solve(data: &str, part: &Part) -> String {
         Part::B => format!("{}", answer),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test1() {
+        let input = "00100
+11110
+10110
+10111
+10101
+01111
+00111
+11100
+10000
+11001
+00010
+01010";
+        assert_eq!(self::solve(input, &Part::A), "198");
+        assert_eq!(self::solve(input, &Part::B), "230");
+    }
+}

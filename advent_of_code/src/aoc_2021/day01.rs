@@ -40,3 +40,23 @@ pub fn solve(data: &str, part: &Part) -> String {
         Part::B => sliding_window(&data, 2).to_string(),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test1() {
+        let input = "199
+200
+208
+210
+200
+207
+240
+269
+260
+263";
+        assert_eq!(self::solve(input, &Part::A), "7");
+        assert_eq!(self::solve(input, &Part::B), "5");
+    }
+}
