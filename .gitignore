@@ -1,4 +1,3 @@
 *.lock
-*.toml
 .env
 target
