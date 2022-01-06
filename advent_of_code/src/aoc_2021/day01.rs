@@ -5,38 +5,38 @@ use crate::Part;
 // [1 |2 4 6| 8], n = 3
 //    |j   i|
 fn sliding_window(a: &Vec<i32>, n: usize) -> i32 {
-  let mut i: usize = 0;
-  let mut j: usize = 0;
-  let mut curr_sum = 0;
-  let mut total = 0;
-  while i < a.len() {
-    // Sliding window reached maximum size
-    if i - j == n {
-      let next_sum = curr_sum + a[i] - a[j];
-      // If the next window is greater than the current window, add to our total
-      if next_sum > curr_sum {
-        total += 1;
-      }
-      // Increment left pointer
-      j += 1;
-      curr_sum = next_sum;
-    } else {
-      // Window has not reached size n
-      curr_sum += a[i];
+    let mut i: usize = 0;
+    let mut j: usize = 0;
+    let mut curr_sum = 0;
+    let mut total = 0;
+    while i < a.len() {
+        // Sliding window reached maximum size
+        if i - j == n {
+            let next_sum = curr_sum + a[i] - a[j];
+            // If the next window is greater than the current window, add to our total
+            if next_sum > curr_sum {
+                total += 1;
+            }
+            // Increment left pointer
+            j += 1;
+            curr_sum = next_sum;
+        } else {
+            // Window has not reached size n
+            curr_sum += a[i];
+        }
+        // Increment right pointer
+        i += 1;
     }
-    // Increment right pointer
-    i += 1;
-  }
-  return total;
+    return total;
 }
 
 pub fn solve(data: &str, part: &Part) -> String {
-  let data: Vec<i32> = data
-    .split_whitespace()
-    .map(|x| x.parse().expect("error: not a number"))
-    .collect();
-  return match part {
-    Part::A => sliding_window(&data, 1).to_string(),
-    Part::B => sliding_window(&data, 2).to_string(),
-  };
+    let data: Vec<i32> = data
+        .split_whitespace()
+        .map(|x| x.parse().expect("error: not a number"))
+        .collect();
+    return match part {
+        Part::A => sliding_window(&data, 1).to_string(),
+        Part::B => sliding_window(&data, 2).to_string(),
+    };
 }

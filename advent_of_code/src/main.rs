@@ -14,7 +14,8 @@ pub enum Part {
     B,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 4 {
         println!("Usage: cargo run <year> <day> <part> [-t, --test] [-s, --submit]");
@@ -31,10 +32,16 @@ fn main() {
         }
     };
     let puzzle = Puzzle { year, day };
-    let data = aoc::input::read(&puzzle);
+    let data = aoc::input::read(&puzzle).await;
+    if data.is_none() {
+        return;
+    }
     let answer = match puzzle.year.as_str() {
-        "2021" => aoc_2021::solve(&puzzle.day.as_str(), &data, &part),
-        _ => panic!("error: invalid year {}", puzzle.year),
+        "2021" => aoc_2021::solve(&puzzle.day.as_str(), &data.unwrap(), &part),
+        _ => {
+            println!("error: invalid year {}", puzzle.year);
+            return;
+        }
     };
     println!("{} Day {}{:?}: {}", puzzle.year, puzzle.day, part, answer);
 }
