@@ -38,7 +38,7 @@ pub fn solve(day: &str, data: &str, part: &Part) -> String {
         "8" => day08::solve(&data, &part),
         "9" => day09::solve(&data, &part),
         "10" => day10::solve(&data, &part),
-        // "11" => day11::solve(&data, &part),
+        "11" => day11::solve(&data, &part),
         // "12" => day12::solve(&data, &part),
         // "13" => day13::solve(&data, &part),
         // "14" => day14::solve(&data, &part),

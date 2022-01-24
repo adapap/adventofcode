@@ -102,12 +102,33 @@ pub mod number {
     }
 }
 
+// Advanced iteration operations and functions on sequences
+pub mod sequence {
+    use itertools::{Itertools, MultiProduct};
+    // Finds the cartesian product up to a k-length sequence
+    // Example: [1 2] (k = 2) -> [1 1], [1 2], [2 1], [2 2]
+    pub trait KProduct: Iterator + Clone
+    where
+        Self::Item: Clone,
+    {
+        fn k_product(self, repeat: usize) -> MultiProduct<Self> {
+            std::iter::repeat(self)
+                .take(repeat)
+                .multi_cartesian_product()
+        }
+    }
+
+    impl<T: Iterator + Clone> KProduct for T where T::Item: Clone {}
+}
+
 #[allow(unused)]
 // Generic n-dimension grids and grid calculations
 pub mod space {
+    use super::sequence::KProduct;
     use std::cmp;
     use std::collections::HashMap;
     use std::hash::Hash;
+    use std::ops::RangeInclusive;
     // Helper types and enums for NGrids
     #[derive(PartialOrd, PartialEq)]
     pub enum Axis {
@@ -136,6 +157,14 @@ pub mod space {
             }
             (self.max[axis] - self.min[axis]).abs() + 1
         }
+        // An iterator over the range of x-values
+        pub fn x_range(&self) -> RangeInclusive<i32> {
+            self.min[0]..=self.max[0]
+        }
+        // An iterator over the domain of y-values
+        pub fn y_range(&self) -> RangeInclusive<i32> {
+            self.min[1]..=self.max[1]
+        }
     }
     // NGrid Implementation
     pub struct NGrid<V, const N: usize> {
@@ -143,7 +172,10 @@ pub mod space {
         default: Option<V>,
         points: HashMap<Point<N>, V>,
     }
-    impl<V, const N: usize> NGrid<V, N> {
+    impl<V, const N: usize> NGrid<V, N>
+    where
+        V: std::fmt::Display,
+    {
         // Create a new NGrid with an optional default value
         pub fn new(default: Option<V>) -> NGrid<V, N> {
             NGrid {
@@ -183,7 +215,6 @@ pub mod space {
         pub fn cardinal(&self, origin: &Point<N>) -> Vec<Point<N>> {
             if N < 2 {
                 panic!("error: need 2 dimensions to find cardinal neighbors");
-                return vec![];
             }
             let mut values = vec![];
             for delta in [-1, 1] {
@@ -195,6 +226,44 @@ pub mod space {
                 values.push(point);
             }
             values
+        }
+        // Returns all points adjacent to a point in any dimension
+        pub fn adjacent(&self, origin: &Point<N>) -> Vec<Point<N>> {
+            let mut values = vec![];
+            let deltas = [-1, 0, 1];
+            for delta in deltas.into_iter().k_product(N) {
+                let mut point: Point<N> = origin.clone();
+                for i in 0..N {
+                    point[i] += delta[i];
+                }
+                // Ignore the origin
+                if point == *origin {
+                    continue;
+                }
+                values.push(point);
+            }
+            values
+        }
+        // Renders a 2D snapshot of the grid
+        pub fn snapshot_2d(&self) -> String {
+            if N != 2 {
+                panic!("error: grid is not 2D")
+            }
+            let mut rows: Vec<String> = vec![];
+            for y in self.bounds.y_range() {
+                let mut row = String::new();
+                for x in self.bounds.x_range() {
+                    let mut point: Point<N> = [0; N];
+                    point[0] = x;
+                    point[1] = y;
+                    match self.get(&point) {
+                        Some(v) => row.push_str(&v.to_string()),
+                        None => row.push(' '),
+                    }
+                }
+                rows.push(row);
+            }
+            rows.join("\n")
         }
     }
 }
