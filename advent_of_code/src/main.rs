@@ -1,4 +1,5 @@
 use std::env;
+use std::time::Instant;
 mod aoc;
 // Import all puzzle solutions
 mod aoc_2021;
@@ -38,6 +39,7 @@ async fn main() {
     if data.is_none() {
         return;
     }
+    let now = Instant::now();
     let answer = match puzzle.year.as_str() {
         "2021" => aoc_2021::solve(&puzzle.day.as_str(), &data.unwrap(), &part),
         _ => {
@@ -45,7 +47,14 @@ async fn main() {
             return;
         }
     };
-    println!("{} Day {}{:?}: {}", puzzle.year, puzzle.day, part, answer);
+    println!(
+        "[{:.1?}] {} Day {}{:?}: {}",
+        now.elapsed(),
+        puzzle.year,
+        puzzle.day,
+        part,
+        answer
+    );
     if submit_flag {
         aoc::input::submit(&puzzle, &part, &answer).await;
     }

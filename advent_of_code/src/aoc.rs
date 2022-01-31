@@ -105,6 +105,7 @@ pub mod number {
 // Advanced iteration operations and functions on sequences
 pub mod sequence {
     use itertools::{Itertools, MultiProduct};
+    use std::collections::HashMap;
     // Finds the cartesian product up to a k-length sequence
     // Example: [1 2] (k = 2) -> [1 1], [1 2], [2 1], [2 2]
     pub trait KProduct: Iterator + Clone
@@ -117,8 +118,16 @@ pub mod sequence {
                 .multi_cartesian_product()
         }
     }
-
     impl<T: Iterator + Clone> KProduct for T where T::Item: Clone {}
+
+    pub fn counter<T: Eq + std::hash::Hash>(seq: &Vec<T>) -> HashMap<&T, u32> {
+        let mut counter: HashMap<_, u32> = HashMap::new();
+        for item in seq {
+            let entry = counter.entry(item).or_insert(0);
+            *entry += 1;
+        }
+        counter
+    }
 }
 
 #[allow(unused)]
@@ -264,6 +273,84 @@ pub mod space {
                 rows.push(row);
             }
             rows.join("\n")
+        }
+    }
+}
+
+// Pathfinding algorithms
+pub mod path {
+    use std::collections::{HashMap, VecDeque};
+    use std::fmt::Debug;
+    use std::hash::Hash;
+    pub struct Graph<N: PartialEq + Eq> {
+        pub edges: HashMap<N, Vec<N>>,
+    }
+
+    // Directed graph implementation for pathfinding algorithms
+    impl<N> Graph<N>
+    where
+        N: PartialEq + Eq + Hash + Clone + Debug,
+    {
+        // Creates a new digraph
+        pub fn new() -> Graph<N> {
+            Graph {
+                edges: HashMap::new(),
+            }
+        }
+
+        // Adds a directed edge to the graph
+        pub fn add_edge(&mut self, a: N, b: N) {
+            let edges = self.edges.entry(a).or_insert(Vec::new());
+            edges.push(b);
+        }
+
+        // Adds an undirected edge to the graph
+        pub fn add_undirected_edge(&mut self, a: N, b: N) {
+            self.add_edge(a.clone(), b.clone());
+            self.add_edge(b, a);
+        }
+
+        // Finds all paths in the graph from a start node to end node
+        // Pass in a check to see if the end goal is reached and a path validator
+        pub fn all_paths<FN1, FN2>(&mut self, start: N, is_goal: FN1, is_valid: FN2) -> Vec<Vec<N>>
+        where
+            FN1: Fn(&N) -> bool,
+            FN2: Fn(&Vec<N>) -> bool,
+        {
+            let mut queue: VecDeque<Vec<N>> = VecDeque::new();
+            let mut paths: Vec<Vec<N>> = Vec::new();
+
+            // Initialize queue with root node
+            let mut path: Vec<N> = vec![start];
+            queue.push_back(path.clone());
+
+            while !queue.is_empty() {
+                // Take the next available path from the queue
+                path = queue.pop_front().unwrap();
+                // Check the last node for goal conditions
+                match path.last() {
+                    None => {
+                        continue;
+                    }
+                    Some(last) => {
+                        // If we are at the goal, return
+                        if is_goal(last) {
+                            paths.push(path.clone());
+                            continue;
+                        }
+                        // Find all paths from neighbors
+                        for state in self.edges.get(&last).unwrap_or(&vec![]).clone() {
+                            let mut next_path = path.clone();
+                            next_path.push(state);
+                            // Eliminate cycles by checking other constraints
+                            if is_valid(&next_path) {
+                                queue.push_back(next_path);
+                            }
+                        }
+                    }
+                }
+            }
+            paths
         }
     }
 }
